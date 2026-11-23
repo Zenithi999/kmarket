@@ -44,6 +44,8 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -58,6 +60,7 @@ export default function ProductsPage() {
       params.set('limit', String(limit));
       if (searchQuery) params.set('search', searchQuery);
       if (selectedCategory) params.set('category', selectedCategory);
+      params.set('status', statusFilter);
 
       const res = await fetch(`/api/products?${params}`);
       if (res.ok) {
@@ -73,7 +76,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchQuery, selectedCategory]);
+  }, [currentPage, searchQuery, selectedCategory, statusFilter]);
 
   useEffect(() => {
     fetchProducts();
@@ -114,12 +117,30 @@ export default function ProductsPage() {
     fetchProducts();
   };
 
+  const togglePublish = async (product: Product) => {
+    setTogglingId(product._id);
+    try {
+      const res = await fetch(`/api/products/${product._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !product.is_active }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(product.is_active ? 'Бараа нуугдлаа' : 'Бараа нийтлэгдлээ');
+      fetchProducts();
+    } catch {
+      toast.error('Төлөв солиход алдаа гарлаа');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const getStatusBadge = (product: Product) => {
+    if (!product.is_active) {
+      return <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Ноорог</span>;
+    }
     if (product.stock === 0) {
       return <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Дууссан</span>;
-    }
-    if (!product.is_active) {
-      return <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Идэвхгүй</span>;
     }
     return <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Идэвхтэй</span>;
   };
@@ -161,6 +182,16 @@ export default function ProductsPage() {
             {categories.map(cat => (
               <option key={cat._id} value={cat.slug}>{cat.name}</option>
             ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setCurrentPage(1); }}
+            className="px-4 py-2 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none"
+          >
+            <option value="all">Бүх төлөв</option>
+            <option value="active">Нийтлэгдсэн</option>
+            <option value="inactive">Ноорог</option>
           </select>
 
           <Button type="submit">
@@ -227,9 +258,10 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-medium">{formatPrice(product.price)}</p>
-                      {product.sale_price && product.sale_price > product.price && (
-                        <p className="text-sm text-gray-400 line-through">{formatPrice(product.sale_price)}</p>
+                      {/* Same rule as the storefront (ProductCard): sale_price is the current price when set */}
+                      <p className="font-medium">{formatPrice(product.sale_price || product.price)}</p>
+                      {product.sale_price && product.sale_price < product.price && (
+                        <p className="text-sm text-gray-400 line-through">{formatPrice(product.price)}</p>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -245,6 +277,17 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => togglePublish(product)}
+                          disabled={togglingId === product._id}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                            product.is_active
+                              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          }`}
+                        >
+                          {product.is_active ? 'Нуух' : 'Нийтлэх'}
+                        </button>
                         <Link href={`/product/${product.slug}`} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                           <Eye className="w-4 h-4 text-gray-500" />
                         </Link>

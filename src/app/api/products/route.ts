@@ -98,7 +98,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let query = supabase.from('products').select('*', { count: 'exact' }).eq('is_active', true);
+    // Admin-only: status=all|inactive also returns unpublished (is_active=false) drafts.
+    // Everyone else always sees active products only.
+    const status = searchParams.get('status');
+    let showStatus: 'active' | 'inactive' | 'all' = 'active';
+    if (status === 'all' || status === 'inactive') {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.email && (await requireAdmin(session.user.email))) showStatus = status;
+    }
+
+    let query = supabase.from('products').select('*', { count: 'exact' });
+    if (showStatus === 'active') query = query.eq('is_active', true);
+    if (showStatus === 'inactive') query = query.eq('is_active', false);
 
     if (categoryId) query = query.eq('category_id', categoryId);
     if (subcategoryId) query = query.eq('subcategory_id', subcategoryId);
