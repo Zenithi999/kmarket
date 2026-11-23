@@ -314,9 +314,9 @@ function ProductsContent() {
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
               onClick={(e) => e.stopPropagation()}
-              className="absolute right-0 top-0 h-full w-full max-w-sm bg-white overflow-y-auto"
+              className="absolute right-0 top-0 h-full w-full max-w-sm bg-white flex flex-col"
             >
-              <div className="sticky top-0 bg-white/90 backdrop-blur border-b px-5 py-4 flex items-center justify-between z-10">
+              <div className="shrink-0 bg-white border-b px-5 py-4 flex items-center justify-between">
                 <h2 className="font-bold text-gray-900">Шүүлтүүр</h2>
                 <button
                   onClick={() => setShowFilters(false)}
@@ -325,21 +325,21 @@ function ProductsContent() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-5">
+              <div className="flex-1 overflow-y-auto overscroll-contain p-5">
                 <FilterSidebar
                   state={filters}
                   onChange={setFilters}
                   categories={categories}
                   products={products}
                 />
-                <div className="pt-5 mt-4 border-t">
-                  <button
-                    onClick={() => setShowFilters(false)}
-                    className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors active:scale-[0.98]"
-                  >
-                    Хайх ({products.length} бараа)
-                  </button>
-                </div>
+              </div>
+              <div className="shrink-0 border-t bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors active:scale-[0.98]"
+                >
+                  Хайх ({products.length} бараа)
+                </button>
               </div>
             </motion.div>
           </motion.div>

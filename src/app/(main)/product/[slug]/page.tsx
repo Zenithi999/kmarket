@@ -8,10 +8,7 @@ import {
   Heart, 
   ShoppingCart, 
   Minus, 
-  Plus, 
-  Truck, 
-  Shield, 
-  RefreshCw,
+  Plus,
   Share2,
   Loader2
 } from 'lucide-react';
@@ -458,28 +455,6 @@ export default function ProductDetailPage() {
                 <Share2 className="w-5 h-5" />
                 Хуваалцах
               </button>
-            </div>
-
-            {/* Features */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Truck className="w-6 h-6 text-primary-500" />
-                </div>
-                <p className="text-sm font-medium">Түргэн хүргэлт</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Shield className="w-6 h-6 text-primary-500" />
-                </div>
-                <p className="text-sm font-medium">Баталгаат бараа</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <RefreshCw className="w-6 h-6 text-primary-500" />
-                </div>
-                <p className="text-sm font-medium">14 хоног буцаалт</p>
-              </div>
             </div>
           </div>
         </div>

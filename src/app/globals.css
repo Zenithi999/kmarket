@@ -492,3 +492,68 @@ body.no-scroll { overflow: hidden; }
 }
 ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; background-clip: padding-box; border: 2px solid transparent; }
 
+
+
+/* ── New Year hero decorations (see src/components/home/NewYearDecor.tsx) ── */
+@keyframes ny-reveal { from { clip-path: inset(0 -24px 100% -24px); } to { clip-path: inset(0 -24px -24px -24px); } }
+@keyframes ny-sway   { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
+@keyframes ny-lower  { from { translate: 0 -110%; } to { translate: 0 0; } }
+@keyframes ny-on     { 0% { scale: 0; } 70% { scale: 1.35; } 100% { scale: 1; } }
+@keyframes ny-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@keyframes ny-glow   { 0%, 100% { opacity: 1; } 45% { opacity: 0.55; } }
+@keyframes ny-draw   { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ny-rise   { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+
+.ny-wire { stroke-dasharray: 1; animation: ny-draw 1.4s cubic-bezier(.4,0,.2,1) both; }
+
+.ny-strand {
+  transform-origin: top center;
+  animation-name: ny-reveal, ny-sway;
+  animation-timing-function: cubic-bezier(.22,1,.36,1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+
+.ny-dot {
+  width: 4px; height: 4px; margin-left: -2px; border-radius: 9999px;
+  background: #fff6d6;
+  box-shadow: 0 0 3px 1px rgba(255, 214, 120, .95), 0 0 9px 3px rgba(255, 190, 80, .45);
+  animation: ny-on .5s cubic-bezier(.22,1,.36,1) both;
+}
+.ny-dot.ny-twinkle {
+  animation-name: ny-on, ny-twinkle;
+  animation-duration: .5s, 2.6s;
+  animation-timing-function: cubic-bezier(.22,1,.36,1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+
+.ny-bulb {
+  width: 7px; height: 11px; margin-left: -3.5px; margin-top: 1px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background: radial-gradient(circle at 40% 35%, #fff 0 18%, var(--c) 55%);
+  box-shadow: 0 0 6px 2px var(--c), 0 0 16px 4px color-mix(in srgb, var(--c) 45%, transparent);
+  animation-name: ny-on, ny-glow;
+  animation-duration: .6s, 3.2s;
+  animation-timing-function: cubic-bezier(.22,1,.36,1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+.ny-bulb::before {
+  content: ''; position: absolute; left: 50%; top: -3px; width: 4px; height: 4px;
+  margin-left: -2px; border-radius: 1px; background: #2d3b2a;
+}
+
+.ny-ornament {
+  transform-origin: top center;
+  animation-name: ny-lower, ny-sway;
+  animation-timing-function: cubic-bezier(.34,1.56,.64,1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+
+.ny-drift { animation: ny-rise 1.2s .3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ny-strand, .ny-dot, .ny-bulb, .ny-ornament, .ny-wire, .ny-drift { animation: none !important; }
+}

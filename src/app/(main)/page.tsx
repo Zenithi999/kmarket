@@ -1,10 +1,10 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Package } from 'lucide-react';
-import { ProductSlider } from '@/components/home';
+import { ProductSlider, HeroBanner, CategoryBar } from '@/components/home';
+import type { CategoryBarItem } from '@/components/home/CategoryBar';
 import { Product } from '@/types';
 
 // Helper to map API response (_id) to frontend Product type (id)
@@ -83,16 +83,6 @@ const CATEGORY_STYLE: Record<string, { photo: string }> = {
   others: { photo: 'https://images.unsplash.com/photo-1513884923967-4b182ef167ab?w=300&q=80&fit=crop&auto=format' },
 };
 
-// Unified shape for the homepage's 8-tile category grid — all 8 are real DB
-// categories now, linking to /category/[slug] like any other category.
-interface CategoryTile {
-  key: string;
-  href: string;
-  name: string;
-  imageSrc?: string; // admin-uploaded real photo — takes priority over `defaultPhoto` when set
-  defaultPhoto: string;
-}
-
 // Default Hero Banner Slides (fallback)
 const defaultSlides: Banner[] = [
   {
@@ -120,15 +110,12 @@ const defaultSlides: Banner[] = [
 
 
 export default function HomePage() {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [banners, setBanners] = useState<Banner[]>(defaultSlides);
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [saleProducts, setSaleProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
 
   // Fetch banners, categories, and products from API
   useEffect(() => {
@@ -201,131 +188,25 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
-  // Auto-slide with transition
-  const goToSlide = useCallback((index: number) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentSlide(index);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning]);
-
-  const nextSlide = useCallback(() => {
-    goToSlide((currentSlide + 1) % banners.length);
-  }, [currentSlide, banners.length, goToSlide]);
-
-  useEffect(() => {
-    if (isPaused || banners.length <= 1) return;
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [isPaused, banners.length, nextSlide]);
-
-  // ── 8 main categories for the Coupang-style square grid, right below the banner ──
-  const mainCategories = categories.length > 0 ? categories.slice(0, 8) : FALLBACK_MAIN_CATEGORIES;
-  const categoryTiles: CategoryTile[] = mainCategories.map((cat) => {
+  // ── Main categories for the floating category card under the hero ──
+  const mainCategories = categories.length > 0 ? categories : FALLBACK_MAIN_CATEGORIES;
+  const categoryTiles: CategoryBarItem[] = mainCategories.map((cat) => {
     const hasPhoto = cat.image || (cat.icon && cat.icon.startsWith('http'));
-    const style = CATEGORY_STYLE[cat.slug];
     return {
       key: cat.slug,
       href: `/category/${cat.slug}`,
       name: cat.name,
-      imageSrc: hasPhoto ? ((cat.image || cat.icon) as string) : undefined,
-      defaultPhoto: style?.photo || 'https://images.unsplash.com/photo-1513884923967-4b182ef167ab?w=300&q=80&fit=crop&auto=format',
+      photo: hasPhoto
+        ? ((cat.image || cat.icon) as string)
+        : CATEGORY_STYLE[cat.slug]?.photo ||
+          'https://images.unsplash.com/photo-1513884923967-4b182ef167ab?w=300&q=80&fit=crop&auto=format',
     };
   });
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* ── HERO BANNER SLIDER (rounded card style) ── */}
-      <section className="bg-white pb-2">
-        <div className="max-w-7xl mx-auto px-3 pt-3">
-          <div
-            className="relative overflow-hidden rounded-2xl shadow-sm"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {banners.map((banner, index) => (
-                <div
-                  key={banner._id}
-                  className="w-full flex-shrink-0 relative aspect-[2/1] lg:aspect-[4/1]"
-                  style={{ backgroundColor: banner.bg_color }}
-                >
-                  <Link href={banner.link || '/products'} className="absolute inset-0 block">
-                    <Image
-                      src={banner.mobile_image || banner.image}
-                      alt={banner.title}
-                      fill
-                      sizes="(min-width: 1024px) 0px, 100vw"
-                      className="object-cover lg:hidden"
-                      priority={index === 0}
-                    />
-                    <Image
-                      src={banner.image}
-                      alt={banner.title}
-                      fill
-                      sizes="(max-width: 1024px) 0px, 1280px"
-                      className="hidden lg:block object-cover"
-                      priority={index === 0}
-                    />
-                  </Link>
-                </div>
-              ))}
-            </div>
-
-            {banners.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
-                {banners.map((banner, index) => (
-                  <button
-                    key={banner._id}
-                    onClick={() => goToSlide(index)}
-                    aria-label={`${index + 1}-р зураг руу шилжих`}
-                    className={`rounded-full transition-all duration-300 ${
-                      index === currentSlide ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/60 hover:bg-white/80'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── MAIN CATEGORIES — real curated product photography per category
-          (until the admin uploads their own) ── */}
-      <section className="bg-white pb-5">
-        <div className="max-w-7xl mx-auto px-3 pt-3">
-          <div className="grid grid-cols-4 gap-y-5 gap-x-2 sm:gap-x-3">
-            {categoryTiles.map((tile) => {
-              const photoSrc = tile.imageSrc || tile.defaultPhoto;
-              return (
-                <Link
-                  key={tile.key}
-                  href={tile.href}
-                  className="group flex flex-col items-center gap-2.5"
-                >
-                  <div className="relative w-16 h-16 sm:w-[76px] sm:h-[76px] rounded-full bg-primary-50/80 overflow-hidden transition-all duration-300 ease-out group-hover:scale-[1.06] group-hover:shadow-[0_8px_20px_rgba(249,115,22,0.28)] group-active:scale-95">
-                    <Image
-                      src={photoSrc}
-                      alt={tile.name}
-                      fill
-                      sizes="76px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <span className="text-[13px] sm:text-sm font-medium text-gray-800 tracking-wide text-center line-clamp-1">
-                    {tile.name}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <HeroBanner banners={banners} />
+      <CategoryBar items={categoryTiles} />
 
       {/* ── FEATURED / TRENDING ── */}
       {featuredProducts.length > 0 && (
