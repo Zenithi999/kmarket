@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
+import { NEW_YEAR_DECOR } from '@/lib/seasonal';
+import { HeaderGarland, SantaHat, LogoSparkles } from '@/components/home/NewYearDecor';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, X, Shield, Sparkles, Shirt, Footprints, Wind, Flame, Crown, Package, Percent, LogOut, Settings, ShoppingBag, ChevronRight } from 'lucide-react';
@@ -204,7 +206,7 @@ export default function Header() {
           {/* Left: hamburger + logo — stays put on mobile (search lives on its own row there);
               on desktop it collapses out of view while the smart search is expanded */}
           <div
-            className={`flex items-center gap-2 flex-shrink-0 overflow-hidden max-w-[220px] opacity-100 transition-all duration-500 ease-out-expo ${
+            className={`flex items-center gap-2 flex-shrink-0 overflow-x-clip max-w-[220px] opacity-100 transition-all duration-500 ease-out-expo ${
               isSearchActive ? 'lg:max-w-0 lg:opacity-0 lg:-translate-x-3 lg:pointer-events-none' : ''
             }`}
           >
@@ -216,17 +218,23 @@ export default function Header() {
             </button>
 
             <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
-              <Image
-                id="header-logo-icon"
-                src="/1.jpg"
-                alt="KMarket"
-                width={44}
-                height={44}
-                className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover"
-                priority
-              />
-              <span id="header-logo-text" className="block font-logo text-xl sm:text-2xl leading-none text-on-surface">
+              <span className="relative flex-shrink-0">
+                <Image
+                  id="header-logo-icon"
+                  src="/1.jpg"
+                  alt="KMarket"
+                  width={44}
+                  height={44}
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover"
+                  priority
+                />
+                {NEW_YEAR_DECOR && (
+                  <SantaHat className="absolute -top-[8px] -left-[7px] w-[26px] md:w-[28px] -rotate-[24deg] drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] transition-transform duration-300 group-hover:-rotate-[14deg]" />
+                )}
+              </span>
+              <span id="header-logo-text" className="relative block font-logo text-xl sm:text-2xl leading-none text-on-surface">
                 KMarket
+                {NEW_YEAR_DECOR && <LogoSparkles />}
               </span>
             </Link>
           </div>
@@ -441,6 +449,8 @@ export default function Header() {
           </nav>
         </div>
       </div>
+
+      {NEW_YEAR_DECOR && <HeaderGarland />}
 
       {/* Smart live-search results — appears full-width right below the header, like a compact products page */}
       <div

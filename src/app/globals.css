@@ -494,17 +494,30 @@ body.no-scroll { overflow: hidden; }
 
 
 
-/* ── New Year hero decorations (see src/components/home/NewYearDecor.tsx) ── */
-@keyframes ny-reveal { from { clip-path: inset(0 -24px 100% -24px); } to { clip-path: inset(0 -24px -24px -24px); } }
+/* ── New Year decorations (see src/components/home/NewYearDecor.tsx) ── */
+@keyframes ny-reveal { from { clip-path: inset(0 -24px 100% -24px); } to { clip-path: inset(0 -24px -40px -24px); } }
 @keyframes ny-sway   { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
 @keyframes ny-lower  { from { translate: 0 -110%; } to { translate: 0 0; } }
 @keyframes ny-on     { 0% { scale: 0; } 70% { scale: 1.35; } 100% { scale: 1; } }
-@keyframes ny-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
-@keyframes ny-glow   { 0%, 100% { opacity: 1; } 45% { opacity: 0.55; } }
+@keyframes ny-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes ny-glow   { 0%, 100% { opacity: 1; scale: 1; } 45% { opacity: 0.45; scale: 0.8; } }
+@keyframes ny-pulse  { 0%, 100% { opacity: 0.75; scale: 0.9; } 50% { opacity: 1; scale: 1.15; } }
+@keyframes ny-ring   { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
 @keyframes ny-draw   { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes ny-rise   { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+@keyframes ny-fade   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ny-breathe { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+@keyframes ny-sparkle { 0%, 100% { opacity: 0.25; scale: 0.6; rotate: 0deg; } 50% { opacity: 1; scale: 1; rotate: 45deg; } }
 
 .ny-wire { stroke-dasharray: 1; animation: ny-draw 1.4s cubic-bezier(.4,0,.2,1) both; }
+
+/* Warm light spilling down from the lights onto the banner */
+.ny-ambient-in { animation: ny-fade 1.8s .5s ease-out both; mix-blend-mode: screen; }
+.ny-ambient {
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 214, 140, .42), rgba(255, 196, 110, .14) 45%, transparent 75%);
+  animation: ny-breathe 5s ease-in-out 2s infinite;
+}
 
 .ny-strand {
   transform-origin: top center;
@@ -514,10 +527,16 @@ body.no-scroll { overflow: hidden; }
   animation-fill-mode: both, none;
 }
 
+/* Fairy-light bulb: hot white core → warm amber bloom, drawn with one gradient (no box-shadow cost) */
 .ny-dot {
-  width: 4px; height: 4px; margin-left: -2px; border-radius: 9999px;
-  background: #fff6d6;
-  box-shadow: 0 0 3px 1px rgba(255, 214, 120, .95), 0 0 9px 3px rgba(255, 190, 80, .45);
+  width: 16px; height: 16px; margin-left: -8px; border-radius: 9999px;
+  background: radial-gradient(circle,
+    #fffef5 0 1.6px,
+    #ffe9a8 2.4px,
+    rgba(255, 196, 84, .85) 3.4px,
+    rgba(255, 170, 60, .32) 5.5px,
+    rgba(255, 160, 50, 0) 8px);
+  mix-blend-mode: screen;
   animation: ny-on .5s cubic-bezier(.22,1,.36,1) both;
 }
 .ny-dot.ny-twinkle {
@@ -528,21 +547,50 @@ body.no-scroll { overflow: hidden; }
   animation-fill-mode: both, none;
 }
 
+/* Glowing star at the end of a strand */
+.ny-star { animation: ny-on .7s cubic-bezier(.34,1.56,.64,1) both; }
+.ny-star svg { filter: drop-shadow(0 0 2px rgba(255, 236, 160, .95)) drop-shadow(0 0 6px rgba(255, 186, 50, .7)); }
+.ny-halo {
+  position: absolute; left: 50%; top: 50%; width: 300%; height: 300%;
+  translate: -50% -50%; border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 220, 120, .55), rgba(255, 190, 70, .18) 40%, transparent 68%);
+  mix-blend-mode: screen;
+  animation: ny-pulse 2.8s ease-in-out infinite;
+}
+
+/* Little golden bell, swinging on its strand */
+.ny-bell {
+  transform-origin: 50% 0;
+  animation-name: ny-on, ny-ring;
+  animation-duration: .7s, 2.4s;
+  animation-timing-function: cubic-bezier(.34,1.56,.64,1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+  filter: drop-shadow(0 1px 1.5px rgba(90, 55, 10, .35));
+}
+
+/* Coloured C9 bulb on the swag wire: glass body + pulsing coloured bloom */
 .ny-bulb {
   width: 7px; height: 11px; margin-left: -3.5px; margin-top: 1px;
   border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-  background: radial-gradient(circle at 40% 35%, #fff 0 18%, var(--c) 55%);
-  box-shadow: 0 0 6px 2px var(--c), 0 0 16px 4px color-mix(in srgb, var(--c) 45%, transparent);
-  animation-name: ny-on, ny-glow;
-  animation-duration: .6s, 3.2s;
-  animation-timing-function: cubic-bezier(.22,1,.36,1), ease-in-out;
-  animation-iteration-count: 1, infinite;
-  animation-fill-mode: both, none;
+  background: radial-gradient(circle at 40% 35%, #fff 0 18%, var(--c) 58%);
+  box-shadow: 0 0 4px 1px var(--c);
+  animation: ny-on .6s cubic-bezier(.22,1,.36,1) both;
 }
 .ny-bulb::before {
   content: ''; position: absolute; left: 50%; top: -3px; width: 4px; height: 4px;
   margin-left: -2px; border-radius: 1px; background: #2d3b2a;
 }
+.ny-bulb::after {
+  content: ''; position: absolute; left: 50%; top: 55%; width: 34px; height: 34px;
+  margin: -17px 0 0 -17px; border-radius: 9999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--c) 60%, transparent), color-mix(in srgb, var(--c) 18%, transparent) 38%, transparent 66%);
+  mix-blend-mode: screen;
+  animation: ny-glow 3.2s ease-in-out var(--d, 0s) infinite;
+}
+.ny-bulb-sm { width: 5px; height: 8px; margin-left: -2.5px; }
+.ny-bulb-sm::before { width: 3px; height: 3px; margin-left: -1.5px; top: -2px; }
+.ny-bulb-sm::after { width: 20px; height: 20px; margin: -10px 0 0 -10px; mix-blend-mode: multiply; opacity: .6; }
 
 .ny-ornament {
   transform-origin: top center;
@@ -553,7 +601,9 @@ body.no-scroll { overflow: hidden; }
 }
 
 .ny-drift { animation: ny-rise 1.2s .3s ease-out both; }
+.ny-sparkle { transform-origin: center; animation: ny-sparkle 2.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ny-strand, .ny-dot, .ny-bulb, .ny-ornament, .ny-wire, .ny-drift { animation: none !important; }
+  .ny-strand, .ny-dot, .ny-bulb, .ny-bulb::after, .ny-ornament, .ny-wire, .ny-drift,
+  .ny-star, .ny-halo, .ny-bell, .ny-ambient, .ny-ambient-in, .ny-sparkle { animation: none !important; }
 }

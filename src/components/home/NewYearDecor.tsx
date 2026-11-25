@@ -32,6 +32,72 @@ function useSize<T extends HTMLElement>() {
 
 const SWAG_COLORS = ['#ff3b3b', '#ffc43d', '#3ddc84', '#4aa8ff', '#ff7ad9'];
 
+/* ───────────────────────── Shared shapes ───────────────────────── */
+
+// Gradients referenced by stars/bells; rendered once per decorated block.
+function GoldDefs() {
+  return (
+    <svg width="0" height="0" className="absolute" aria-hidden>
+      <defs>
+        <radialGradient id="nyStarG" cx="50%" cy="45%" r="60%">
+          <stop offset="0%" stopColor="#fffbe6" />
+          <stop offset="40%" stopColor="#ffdc5c" />
+          <stop offset="100%" stopColor="#eda21a" />
+        </radialGradient>
+        <linearGradient id="nyBellG" x1="0" x2="1">
+          <stop offset="0%" stopColor="#8f6110" />
+          <stop offset="38%" stopColor="#f6d672" />
+          <stop offset="50%" stopColor="#fff4c8" />
+          <stop offset="72%" stopColor="#d9a42b" />
+          <stop offset="100%" stopColor="#80560d" />
+        </linearGradient>
+        <linearGradient id="nyBowG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ff4d57" />
+          <stop offset="100%" stopColor="#b3121f" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+const STAR_PATH = 'M12 1.2l3.2 6.7 7.3 1-5.3 5.1 1.3 7.3L12 17.8l-6.5 3.5 1.3-7.3L1.5 8.9l7.3-1z';
+
+function GlowStar({ size, top, delay, pulse }: { size: number; top: number; delay: number; pulse: number }) {
+  return (
+    <span
+      className="ny-star absolute left-0"
+      style={{ top, width: size, height: size, marginLeft: -size / 2, animationDelay: `${delay}ms` }}
+    >
+      <span className="ny-halo" style={{ animationDelay: `${pulse}s` }} />
+      <svg viewBox="0 0 24 24" className="relative block h-full w-full">
+        <path d={STAR_PATH} fill="url(#nyStarG)" stroke="#fff6c4" strokeWidth="0.7" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
+function Bell({ size, top, delay, swing }: { size: number; top: number; delay: number; swing: number }) {
+  return (
+    <span
+      className="ny-bell absolute left-0"
+      style={{ top, width: size, marginLeft: -size / 2, animationDelay: `${delay}ms, ${swing}s` }}
+    >
+      <svg viewBox="0 0 32 38" className="block w-full overflow-visible">
+        {/* ribbon bow */}
+        <path d="M16 6 C11 0.5 5 2.5 8 7.5 C10 9.5 13.5 8.5 16 6Z" fill="url(#nyBowG)" />
+        <path d="M16 6 C21 0.5 27 2.5 24 7.5 C22 9.5 18.5 8.5 16 6Z" fill="url(#nyBowG)" />
+        <path d="M15 7 L12 13 M17 7 L20 13" stroke="#c4161f" strokeWidth="1.6" strokeLinecap="round" />
+        <circle cx="16" cy="6.5" r="2.2" fill="#d91e2a" />
+        {/* bell */}
+        <path d="M16 9 C9.5 9 7.5 14.5 7.5 20.5 C7.5 25 6 27.5 3.5 29.5 H28.5 C26 27.5 24.5 25 24.5 20.5 C24.5 14.5 22.5 9 16 9Z" fill="url(#nyBellG)" />
+        <rect x="2.5" y="28.5" width="27" height="3.6" rx="1.8" fill="url(#nyBellG)" />
+        <circle cx="16" cy="34" r="2.7" fill="#b9851b" />
+        <path d="M11.5 13.5 C10 17 9.8 21.5 10.2 25" stroke="#fff" strokeOpacity="0.6" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+      </svg>
+    </span>
+  );
+}
+
 /* ───────────────────────── Curtain lights ───────────────────────── */
 
 export function CurtainLights() {
@@ -62,7 +128,8 @@ export function CurtainLights() {
         swagBulbs.push({ x, y: swagY(x), c: SWAG_COLORS[(i * perSeg + k) % SWAG_COLORS.length] });
       }
 
-    // Icicle-style curtain strands hanging from the wire.
+    // Icicle-style curtain strands hanging from the wire; some end in a glowing
+    // star or a little golden bell, like a real star-curtain light set.
     const spacing = mobile ? 20 : 24;
     const strandCount = Math.floor(w / spacing);
     const pattern = [0.55, 1, 0.75, 0.4, 0.9, 0.65];
@@ -71,40 +138,55 @@ export function CurtainLights() {
       const x = (i + 0.5) * spacing + (w - strandCount * spacing) / 2;
       const len = maxLen * (pattern[i % pattern.length] * 0.75 + rand() * 0.25);
       const gap = mobile ? 13 : 15;
-      const bulbs = Math.max(2, Math.floor(len / gap));
-      return { x, y: swagY(x), len, gap, bulbs, swayDur: 4 + rand() * 3, swayDelay: -rand() * 6 };
+      const end: 'star' | 'bell' | null = i % 4 === 1 ? 'star' : i % 6 === 3 ? 'bell' : null;
+      const bulbs = Math.max(2, Math.floor(len / gap) - (end ? 1 : 0));
+      return { x, y: swagY(x), len, gap, bulbs, end, swayDur: 4 + rand() * 3, swayDelay: -rand() * 6 };
     });
 
     content = (
       <>
-        {strands.map((s, i) => (
-          <div
-            key={i}
-            className="ny-strand absolute top-0"
-            style={{
-              left: s.x,
-              top: s.y,
-              height: s.len,
-              animationDelay: `${(s.x / w) * 900}ms, ${s.swayDelay}s`,
-              animationDuration: `900ms, ${s.swayDur}s`,
-            }}
-          >
-            <span className="absolute left-0 top-0 h-full w-px -translate-x-1/2 bg-[#2b3a2f]/35" />
-            {Array.from({ length: s.bulbs }, (_, b) => {
-              const tw = (i * 7 + b * 3) % 4 === 0;
-              return (
-                <span
-                  key={b}
-                  className={`ny-dot absolute left-0 ${tw ? 'ny-twinkle' : ''}`}
-                  style={{
-                    top: (b + 1) * s.gap - 4,
-                    animationDelay: `${300 + (s.x / w) * 1400 + b * 40}ms${tw ? `, ${((i * 13 + b * 29) % 37) / 10}s` : ''}`,
-                  }}
-                />
-              );
-            })}
-          </div>
-        ))}
+        <GoldDefs />
+        <div className="ny-ambient-in absolute inset-x-0 top-0 h-[60%]">
+          <div className="ny-ambient h-full w-full" />
+        </div>
+
+        {strands.map((s, i) => {
+          const on = 300 + (s.x / w) * 1400;
+          return (
+            <div
+              key={i}
+              className="ny-strand absolute top-0"
+              style={{
+                left: s.x,
+                top: s.y,
+                height: s.len,
+                animationDelay: `${(s.x / w) * 900}ms, ${s.swayDelay}s`,
+                animationDuration: `900ms, ${s.swayDur}s`,
+              }}
+            >
+              <span className="absolute left-0 top-0 h-full w-px -translate-x-1/2 bg-[#2b3a2f]/35" />
+              {Array.from({ length: s.bulbs }, (_, b) => {
+                const tw = (i * 7 + b * 3) % 4 === 0;
+                return (
+                  <span
+                    key={b}
+                    className={`ny-dot absolute left-0 ${tw ? 'ny-twinkle' : ''}`}
+                    style={{
+                      top: (b + 1) * s.gap - 8,
+                      animationDelay: `${on + b * 40}ms${tw ? `, ${((i * 13 + b * 29) % 37) / 10}s` : ''}`,
+                    }}
+                  />
+                );
+              })}
+              {s.end === 'star' && (
+                <GlowStar size={mobile ? 12 : 16} top={s.len - 3} delay={on + s.bulbs * 40 + 150} pulse={(i % 5) * 0.6} />
+              )}
+              {s.end === 'bell' && (
+                <Bell size={mobile ? 12 : 16} top={s.len - 2} delay={on + s.bulbs * 40 + 150} swing={-(i % 4) * 0.7} />
+              )}
+            </div>
+          );
+        })}
 
         <svg className="absolute left-0 top-0 overflow-visible" width={w} height={sag * 2 + 4} aria-hidden>
           <path d={d} pathLength={1} fill="none" stroke="#24331f" strokeOpacity="0.55" strokeWidth="1.6" className="ny-wire" />
@@ -119,7 +201,8 @@ export function CurtainLights() {
                 left: b.x,
                 top: b.y,
                 '--c': b.c,
-                animationDelay: `${200 + (b.x / w) * 1200}ms, ${(i % 7) * 0.45}s`,
+                '--d': `${(i % 7) * 0.45}s`,
+                animationDelay: `${200 + (b.x / w) * 1200}ms`,
               } as React.CSSProperties
             }
           />
@@ -132,6 +215,97 @@ export function CurtainLights() {
     <div ref={ref} aria-hidden className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
       {content}
     </div>
+  );
+}
+
+/* ───────────────────────── Header garland ───────────────────────── */
+
+// A short string of mini bulbs draped along the bottom edge of the sticky header.
+export function HeaderGarland() {
+  const [ref, { w }] = useSize<HTMLDivElement>();
+
+  let content = null;
+  if (w > 0) {
+    const segments = Math.max(3, Math.round(w / 150));
+    const segW = w / segments;
+    const sag = 7;
+    let d = 'M0,0';
+    for (let i = 0; i < segments; i++) d += ` Q${(i + 0.5) * segW},${2 * sag} ${(i + 1) * segW},0`;
+    const per = Math.max(3, Math.round(segW / 26));
+    const bulbs: { x: number; y: number; c: string }[] = [];
+    for (let i = 0; i < segments; i++)
+      for (let k = 0; k < per; k++) {
+        const t = (k + 0.5) / per;
+        bulbs.push({ x: (i + t) * segW, y: 4 * sag * t * (1 - t), c: SWAG_COLORS[(i * per + k) % SWAG_COLORS.length] });
+      }
+
+    content = (
+      <>
+        <svg className="absolute left-0 top-0 overflow-visible" width={w} height={sag * 2 + 2}>
+          <path d={d} pathLength={1} fill="none" stroke="#24331f" strokeOpacity="0.4" strokeWidth="1.1" className="ny-wire" />
+        </svg>
+        {bulbs.map((b, i) => (
+          <span
+            key={i}
+            className="ny-bulb ny-bulb-sm absolute"
+            style={
+              {
+                left: b.x,
+                top: b.y,
+                '--c': b.c,
+                '--d': `${(i % 9) * 0.37}s`,
+                animationDelay: `${300 + (b.x / w) * 1400}ms`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <div ref={ref} aria-hidden className="pointer-events-none absolute inset-x-0 top-full h-5">
+      {content}
+    </div>
+  );
+}
+
+/* ───────────────────────── Logo touches ───────────────────────── */
+
+export function SantaHat({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 40" aria-hidden className={`pointer-events-none overflow-visible ${className}`}>
+      <defs>
+        <linearGradient id="nyHatRed" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f0444b" />
+          <stop offset="100%" stopColor="#a10f19" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M5 31 C7 16 18 5 32 5 C40 5 45.5 10 44 19 L39.5 18.5 C38.5 14 35.5 12.5 32.5 13.5 C29 15 32 23 40 31 Z"
+        fill="url(#nyHatRed)"
+      />
+      <path d="M12 26 C15 17 21 11 28 9" stroke="#fff" strokeOpacity="0.25" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <circle cx="42" cy="21" r="5" fill="#fff" />
+      <circle cx="40.5" cy="19.5" r="1.6" fill="#eef3f8" />
+      <rect x="1" y="27" width="43" height="10" rx="5" fill="#fff" />
+      <path d="M4 34.5 C10 36.5 34 36.5 41 34.5" stroke="#dfe7ef" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const SPARKLE_PATH = 'M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z';
+
+export function LogoSparkles() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute -right-[18px] -top-2.5 h-6 w-6">
+      <svg viewBox="0 0 24 24" className="ny-sparkle absolute right-0 top-0 h-[14px] w-[14px] drop-shadow-[0_0_3px_rgba(245,180,0,0.6)]">
+        <path d={SPARKLE_PATH} fill="#f5b400" />
+      </svg>
+      <svg viewBox="0 0 24 24" className="ny-sparkle absolute left-0 bottom-0 h-[8px] w-[8px]" style={{ animationDelay: '1.1s' }}>
+        <path d={SPARKLE_PATH} fill="#ff6b4a" />
+      </svg>
+    </span>
   );
 }
 
